@@ -30,3 +30,14 @@ Route::delete('/volumes/{volume_id}', 'VolumeController@destroyVolume');
 Route::get('/v1/auth/authorize', 'AuthController@checkAuthorizedToken');
 // Route::get('/v1/auth/tokens', 'AuthController@getAuthorizedToken');
 Route::post('/v1/auth/tokens', 'AuthController@createAuthorizedToken');
+
+// API
+Route::get('/api', function () {
+    return view('api', ['message' => 'API']);
+});
+
+Route::prefix('api')->group(function () {
+    Route::post('/ApiConnection/Login', 'ApiConnectionController@login');
+    Route::post('/ApiConnection/Logout', 'ApiConnectionController@logout');
+    Route::get('/ApiConnection/ApiConnection', 'ApiConnectionController@apiConnection');
+});
