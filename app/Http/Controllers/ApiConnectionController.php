@@ -18,9 +18,10 @@ class ApiConnectionController extends Controller
     public function login(Request $request)
     {
         try {
+            $auth = base64_encode('dell:dell');
             $response = $this->_client->request('POST', env('DSM_REST_API_URI').'/ApiConnection/Login', [
                 'headers' => [
-                    'Authorization' => 'Basic ZGVsbDpkZWxs',
+                    'Authorization' => 'Basic '.$auth,
                     'Content-Type' => 'application/json',
                     'x-dell-api-version' => '3.3'
                 ]
@@ -70,6 +71,49 @@ class ApiConnectionController extends Controller
 
     public function apiConnection(Request $request)
     {
+        $result = $this->_apiConnection();
+        if (!is_null($result)) {
+            return view('api', ['message' => $result]);
+        }
+
+        return view('api', ['message' => 'API Connection Fail.']);
+    }
+
+    public function storageCenterList(Request $request)
+    {
+        $result = $this->_apiConnection();
+        if (!is_null($result)) {
+            $resultObj = json_decode($result);
+            $instanceId = $resultObj->instanceId;
+            $Cookie = session('Cookie');
+
+            if (!empty($Cookie) && !is_null($Cookie)) {
+                try {
+                    $response = $this->_client->request('GET', env('DSM_REST_API_URI').'/ApiConnection/ApiConnection/'.$instanceId.'/StorageCenterList', [
+                        'headers' => [
+                            'Content-Type' => 'application/json',
+                            'Cookie' => $Cookie,
+                            'x-dell-api-version' => '3.3'
+                        ]
+                    ]);
+
+                    if ($response->getStatusCode() === 200) {
+                        $storageCenters = json_decode($response->getBody());
+                        return view('api', ['message' => 'Success.', 'storageCenters' => $storageCenters]);
+                    } else {
+                    }
+                } catch (Exception $e) {
+                }
+            }
+
+            return view('api', ['message' => 'Get StorageCenterList Fail.']);
+        }
+
+        return view('api', ['message' => 'API Connection Fail.']);
+    }
+
+    private function _apiConnection()
+    {
         $Cookie = session('Cookie');
 
         if (!empty($Cookie) && !is_null($Cookie)) {
@@ -83,14 +127,12 @@ class ApiConnectionController extends Controller
                 ]);
 
                 if ($response->getStatusCode() === 200) {
-                    $response_body = $response->getBody();
-                    return view('api', ['message' => 'Success. '.$response_body]);
+                    return $response->getBody();
                 } else {
+                    return null;
                 }
             } catch (Exception $e) {
             }
         }
-
-        return view('api', ['message' => 'Cookie 값이 없습니다. Login 해주세요.']);
     }
 }
