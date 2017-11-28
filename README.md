@@ -1,3 +1,1 @@
-# devs
-
-DSM REST API
+# DSM REST API
